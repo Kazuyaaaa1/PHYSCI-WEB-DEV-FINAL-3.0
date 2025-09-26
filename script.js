@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 		for(const e of entries){
 			if(e.isIntersecting){
 				e.target.classList.add('visible');
+				// Remove transition delay after reveal to avoid hover lag on cards
+				e.target.style.transitionDelay='0ms';
 				observer.unobserve(e.target);
 			}
 		}
