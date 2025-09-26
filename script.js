@@ -150,10 +150,40 @@ document.addEventListener('DOMContentLoaded',()=>{
 		el.addEventListener('pointerleave',()=>{el.style.transform='rotateY(0) rotateX(0)';rect=null;});
 	}
 
-	// Set endorsement embedded video (no autoplay so it doesn't distract)
+	// Endorsement video: autoplay when in view, pause when out of view (muted)
 	const endorseFrame=document.getElementById('endorseFrame');
 	if(endorseFrame){
-		endorseFrame.src=`https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1`;
+		const base=`https://www.youtube.com/embed/${ytId}`;
+		const params=new URLSearchParams({
+			rel:'0',
+			modestbranding:'1',
+			enablejsapi:'1',
+			playsinline:'1',
+			mute:'1' // start muted to satisfy autoplay policies
+		});
+		endorseFrame.src=`${base}?${params.toString()}`;
+
+		const send=(cmd)=>{
+			try{
+				endorseFrame.contentWindow.postMessage(JSON.stringify({event:'command',func:cmd,args:[]}),"*");
+			}catch(e){}
+		};
+
+		const videoSection=document.getElementById('endorse-video');
+		if(videoSection && 'IntersectionObserver' in window){
+			const vidObs=new IntersectionObserver((entries)=>{
+				for(const entry of entries){
+					if(entry.isIntersecting && entry.intersectionRatio>0.25){
+						// ensure muted then play
+						send('mute');
+						send('playVideo');
+					}else{
+						send('pauseVideo');
+					}
+				}
+			},{threshold:[0,0.25,0.5,0.75,1]});
+			vidObs.observe(videoSection);
+		}
 	}
 
   // Re-anchor to current hash after assets load to avoid jumping to top
