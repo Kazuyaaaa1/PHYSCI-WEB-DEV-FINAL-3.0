@@ -175,7 +175,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 				for(const entry of entries){
 					if(entry.isIntersecting && entry.intersectionRatio>0.25){
 						// ensure muted then play
-						send('mute');
 						send('playVideo');
 					}else{
 						send('pauseVideo');
