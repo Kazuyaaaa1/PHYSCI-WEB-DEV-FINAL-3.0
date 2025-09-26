@@ -169,15 +169,54 @@ document.addEventListener('DOMContentLoaded',()=>{
 			}catch(e){}
 		};
 
+		// Unmute overlay button (required for autoplay with sound)
+		let userHasUnmuted=false;
+		const wrap=endorseFrame.parentElement;
+		let unmuteBtn=null;
+		if(wrap){
+			wrap.style.position=wrap.style.position||'relative';
+			unmuteBtn=document.createElement('button');
+			unmuteBtn.type='button';
+			unmuteBtn.textContent='Tap to unmute';
+			unmuteBtn.setAttribute('aria-label','Unmute video');
+			unmuteBtn.style.position='absolute';
+			unmuteBtn.style.right='12px';
+			unmuteBtn.style.bottom='12px';
+			unmuteBtn.style.zIndex='3';
+			unmuteBtn.style.padding='10px 14px';
+			unmuteBtn.style.border='0';
+			unmuteBtn.style.borderRadius='8px';
+			unmuteBtn.style.background='rgba(0,0,0,.65)';
+			unmuteBtn.style.color='#fff';
+			unmuteBtn.style.fontWeight='600';
+			unmuteBtn.style.cursor='pointer';
+			unmuteBtn.style.backdropFilter='saturate(1.2) blur(2px)';
+			wrap.appendChild(unmuteBtn);
+			unmuteBtn.addEventListener('click',()=>{
+				userHasUnmuted=true;
+				send('unMute');
+				send('playVideo');
+				unmuteBtn.style.display='none';
+			});
+		}
+
 		const videoSection=document.getElementById('endorse-video');
 		if(videoSection && 'IntersectionObserver' in window){
 			const vidObs=new IntersectionObserver((entries)=>{
 				for(const entry of entries){
 					if(entry.isIntersecting && entry.intersectionRatio>0.25){
-						// ensure muted then play
-						send('playVideo');
+						if(userHasUnmuted){
+							send('unMute');
+							send('playVideo');
+						}else{
+							// ensure muted then play for autoplay policy
+							send('mute');
+							send('playVideo');
+						}
+						if(unmuteBtn){unmuteBtn.style.display=userHasUnmuted?'none':'';}
 					}else{
 						send('pauseVideo');
+						if(unmuteBtn){unmuteBtn.style.display='none';}
 					}
 				}
 			},{threshold:[0,0.25,0.5,0.75,1]});
